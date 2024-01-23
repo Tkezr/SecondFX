@@ -17,7 +17,7 @@ class UserData{
 
 public class MongoConnection {
 	
-	private static String uri = "mongodb+srv://scep:R0K57a9W2VY5MJzw@data.o09hwlq.mongodb.net/?retryWrites=true&w=majority";
+	private static String uri = Mongouri.get();
     public static String conn() {
 
         // Replace the placeholder with your MongoDB deployment's connection string
