@@ -37,8 +37,8 @@ public class Signin {
 		String pass = Password.getText();
 		String confirm = ConfirmPassword.getText();
 		//Organization O = new Organization();
-		if(auth.equals("pf0x80x08x5")) {
-			CompletableFuture.supplyAsync(()-> MongoConnection.Createauth())
+		if(auth.equals("pf0x80x08x5") || auth.equals("pf1x80x08x5")) {
+			CompletableFuture.supplyAsync(()-> MongoConnection.Createauth("" + auth.charAt(2)))
 			.thenAcceptAsync(token -> {
 				Platform.runLater(() -> {
 					result.setText("Token Generated with " + token + "!");

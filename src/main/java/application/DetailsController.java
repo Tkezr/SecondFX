@@ -19,6 +19,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
@@ -28,46 +29,66 @@ public class DetailsController {
 	@FXML
 	ImageView userIcon;
 	@FXML
-	Label imagePath;
+	Label imagePath,userInfo,currName,newName;
 	@FXML
-	Button imgUpload;
+	Button imgUpload,nameUpload;
 	@FXML
-	Label userInfo;
+	TextField TFnameChange;
 	
-	String filePath;
+	String name = "";
+	String filePath = "";
 	Organization Org;
-	boolean ready;
 	
 	public void init(Organization Org) {
 		this.Org = Org;
-		userInfo.setText("User: " + Org.userInfo.getString("user") + "     " + "User Id: " + Org.userInfo.getInteger("userid"));
+		userInfo.setText("User Id: " + Org.userInfo.getInteger("userid"));
 		userIcon.setImage(new Image(new ByteArrayInputStream(Base64.getDecoder().decode(Org.userInfo.getString("image")))));
-		ready = false;
+		imgUpload.setText("Select Image");
+		imagePath.setText("");
+		TFnameChange.setVisible(false);
+		newName.setVisible(false);
+		currName.setText(Org.userInfo.getString("user"));
 	}
 	
 	public void UploadImage(ActionEvent e) throws IOException, InterruptedException, ExecutionException {
-		if(!ready) {
+		if(filePath.equals("")) {
 		JFileChooser file = new JFileChooser();
 		int res = file.showOpenDialog(null);
 		if(res == JFileChooser.APPROVE_OPTION) {
-		filePath = file.getSelectedFile().toString();
-		if(!(filePath.toLowerCase().endsWith(".png") || filePath.toLowerCase().endsWith(".jpg"))){
-			imagePath.setText("Current Selected image : Not a png or jpg try again");
-			ready = false;
-		}
-		else {
-			imagePath.setText("Current Selected image : '" + filePath + "'");
-			ready = true;
-		}
+			filePath = file.getSelectedFile().toString();
+			if(!(filePath.toLowerCase().endsWith(".png") || filePath.toLowerCase().endsWith(".jpg"))){
+				imagePath.setText("Current Selected image : Not a png or jpg try again");
+			}
+			else {
+				imagePath.setText("Current Selected image : '" + filePath + "'");
+				imgUpload.setText("Upload Image");
+			}
 		}
 		}else {
-		byte[] rdimg = Files.readAllBytes(Paths.get(filePath));
-		 String b64 = Base64.getEncoder().encodeToString(rdimg);
-		 CompletableFuture<Void> task = CompletableFuture.runAsync(() -> MongoConnection.sendimg(b64,Org.userInfo.getInteger("userid", 0)));
+			byte[] rdimg = Files.readAllBytes(Paths.get(filePath));
+			String b64 = Base64.getEncoder().encodeToString(rdimg);
+			CompletableFuture<Void> task = CompletableFuture.runAsync(() -> MongoConnection.sendimg(b64,Org.userInfo.getInteger("userid", 0)));
 		 
-		 task.get();
-		 imgUpload.setDisable(true);
-		 imagePath.setText("Image Changed restart to see changes");
+			task.get();
+			imgUpload.setDisable(true);
+			imagePath.setText("Image Changed restart to see changes");
+		}
+	}
+	
+	public void nameUpdate(ActionEvent e) throws InterruptedException, ExecutionException {
+		if(TFnameChange.getText().equals("")) {
+			TFnameChange.setVisible(true);
+			newName.setVisible(true);
+			nameUpload.setText("Update Name");
+		}
+		else {
+			this.name = TFnameChange.getText();
+			CompletableFuture<Void> task = CompletableFuture.runAsync(() -> MongoConnection.sendUsername(name, Org.userInfo.getInteger("userid")));
+			 
+			task.get();
+			TFnameChange.setVisible(false);
+			newName.setVisible(false);
+			nameUpload.setText("Change Name");
 		}
 	}
 	

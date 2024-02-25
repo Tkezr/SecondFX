@@ -10,12 +10,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 
+import java.util.Properties;
+import javax.mail.*;
+import javax.mail.internet.*;
+
 
 public class Main extends Application  {
 	@Override
 	public void start(Stage stage) throws IOException {
 		//Group root = new Group();
-		
 		
 		Parent root = FXMLLoader.load(getClass().getResource("Main.fxml"));
 		
@@ -34,4 +37,6 @@ public class Main extends Application  {
 	public static void main(String[] args) {
 		launch(args);
 	}
+	
+	
 }

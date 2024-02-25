@@ -55,29 +55,20 @@ public class MainController {
 		stage.show();
 	}
 	
-	public void sendImage(ActionEvent e) throws IOException, InterruptedException, ExecutionException {
-		 
-		 byte[] rdimg = Files.readAllBytes(Paths.get("C:\\Users\\scepi\\Downloads\\prashant.png"));
-		 String b64 = Base64.getEncoder().encodeToString(rdimg);
-		 CompletableFuture<Void> task = CompletableFuture.runAsync(() -> MongoConnection.sendimg(b64,O.userInfo.getInteger("userid", 0)));
-		 
-		 task.get();
-		 
-		 System.out.println(b64);
-		
+	public static boolean isInteger(String s) {
+	    try { 
+	        Integer.parseInt(s); 
+	    } catch(NumberFormatException e) { 
+	        return true; 
+	    } catch(NullPointerException e) {
+	        return true;
+	    }
+	    return false;
 	}
-	
-	public void recieveImage(ActionEvent e) throws InterruptedException, ExecutionException {
-		CompletableFuture<String> b64 = CompletableFuture.supplyAsync(() -> MongoConnection.rec(O.userInfo.getInteger("userid", 0)));
-		
-		 byte[] wrimg = Base64.getDecoder().decode(b64.get());
-		 Image img = new Image(new ByteArrayInputStream(wrimg));
-		 this.img.setImage(img);
-	}
-	
 	
 	public void validateLogin(ActionEvent e) throws IOException, InterruptedException, ExecutionException {
 		
+//		if(isInteger(idInput.getText())) return;
 		int id = Integer.parseInt(idInput.getText());
 		String pw = pwInput.getText();
 		
@@ -116,7 +107,7 @@ public class MainController {
 			        });
 			    } else {
 			        Platform.runLater(() -> {
-			            Error.setText("Invalid data or error occurred during data loading");
+			            Error.setText("Invalid credentials or error occurred during data loading");
 			            Error.setTextFill(Color.DARKRED);
 			            Login.setDisable(false);
 			        });

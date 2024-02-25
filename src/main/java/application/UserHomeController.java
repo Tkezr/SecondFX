@@ -2,6 +2,7 @@ package application;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -21,28 +22,34 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class UserHomeController {
 	
 	@FXML
-	Label userInfo;
+	Label userInfo,errorLabel;
 	@FXML
 	ImageView userIcon;
 	@FXML
-	Button nextMonth;
+	Button nextMonth,addSub;
 	@FXML
-	Button prevMonth;
+	Button prevMonth,markAtnd;
 	@FXML
-	Button markAtnd;
+	StackPane stackPane;
 	@FXML
 	GridPane calendarPane;
 	@FXML
 	Label monthYear;
-	
+
+	String tempS;
 	Organization Org;
 	YearMonth currentYearMonth;
 	
@@ -55,7 +62,59 @@ public class UserHomeController {
 		currentYearMonth = YearMonth.now();
         updateCalendar(calendarPane, currentYearMonth);
         updateMonthYear();
+        boolean shouldPerms = (Org.userInfo.getString("status").equals("subordinate"));
+        addSub.setVisible(!shouldPerms);
 		}
+	
+	public void addSubordinate(ActionEvent e) throws ExecutionException {
+		Node source = (Node) e.getSource();
+	    Stage primaryStage = (Stage) source.getScene().getWindow();
+	    primaryStage.getScene().getRoot().setDisable(true);
+	        
+	    	Label popupLabel = new Label("Enter UserID of subordinate");
+	        TextField popupTextField = new TextField();
+	        Button submitButton = new Button("Submit");
+	        Button returnHome = new Button("Return");
+	        Label errLabel = new Label("");
+	        VBox popupLayout = new VBox(10);
+	        popupLayout.getChildren().addAll(popupLabel,popupTextField, submitButton,returnHome,errLabel);
+	        
+	        Stage popupStage = new Stage();
+	        popupStage.initModality(Modality.APPLICATION_MODAL);
+	        popupStage.setTitle("Popup Window");
+	        
+	        submitButton.setOnAction(ev -> {
+	            String text = popupTextField.getText();
+	            int uid = Integer.parseInt(text);
+	            CompletableFuture<String> ans = CompletableFuture.supplyAsync(() -> MongoConnection.addSubordinate(uid, Org.userInfo.getInteger("userid")));
+	            try {
+					text = ans.get();
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (ExecutionException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	            System.out.println(text);
+	            errLabel.setText(text);
+	            submitButton.setDisable(true);
+	        });
+	        
+	        returnHome.setOnAction(ev -> {
+	        	popupStage.close();
+	            primaryStage.getScene().getRoot().setDisable(false);
+	        });
+	        
+	        popupStage.setOnCloseRequest(ev -> {
+	            primaryStage.getScene().getRoot().setDisable(false);
+	        });
+	        
+	        Scene popupScene = new Scene(popupLayout, 300, 200); 
+	        popupStage.setScene(popupScene);
+	        popupStage.setResizable(false);
+	        popupStage.show();
+	}
 	
 	private void updateMonthYear() {
 		monthYear.setText(currentYearMonth.getMonth().toString() + " " + currentYearMonth.getYear());
@@ -63,7 +122,18 @@ public class UserHomeController {
 	
 	private void updateCalendar(GridPane calendarPane, YearMonth yearMonth) {
         calendarPane.getChildren().removeIf(node -> GridPane.getRowIndex(node) != null || GridPane.getColumnIndex(node) != null);
-
+        
+        if((currentYearMonth.getYear() + "-" + oneTo2digit(currentYearMonth.getMonthValue())).equals("2024-12")) {
+        	nextMonth.setDisable(true);
+        }else {
+        	nextMonth.setDisable(false);
+        }
+        if((currentYearMonth.getYear() + "-" + oneTo2digit(currentYearMonth.getMonthValue())).equals("2024-01")) {
+        	prevMonth.setDisable(true);
+        }else {
+        	prevMonth.setDisable(false);
+        }
+        
         int daysInMonth = yearMonth.lengthOfMonth();
         LocalDate firstOfMonth = yearMonth.atDay(1);
         
@@ -78,6 +148,7 @@ public class UserHomeController {
         
         int row = 1;
         int col = firstOfMonth.getDayOfWeek().getValue() % 7;
+        LocalDate today = LocalDate.now();
         for (int i = 1; i <= daysInMonth; i++) {
             Label day = new Label(String.valueOf(i));
             day.setAlignment(Pos.CENTER);
@@ -86,9 +157,14 @@ public class UserHomeController {
             calendarPane.getChildren().add(day);
             
             String thisdate = currentYearMonth.getYear() + "-" + oneTo2digit(currentYearMonth.getMonthValue()) + "-" + oneTo2digit(i);
+            System.out.println("i = "+i+" col = "+col+ " day = ");
+            if(col != 0 && !(Org.holidays.contains(thisdate)) && (today.isAfter(LocalDate.parse(thisdate)))) {
             if(Org.attendance.contains(thisdate))
             {
             	day.setStyle("-fx-background-color: green");
+            }else {
+            	day.setStyle("-fx-background-color: red");
+            }
             }
             col = (col + 1) % 7;
             if (col == 0)
@@ -126,7 +202,7 @@ public class UserHomeController {
 	
 	public void MarkPresent(ActionEvent e) throws InterruptedException, ExecutionException {
 		String today = (LocalDate.now()).toString();
-		if(!(Org.attendance.contains(today)))
+		if(!(Org.attendance.contains(today)) && !Org.holidays.contains(today) && LocalDate.now().getDayOfWeek() != DayOfWeek.SUNDAY)
 		{
 			CompletableFuture<String> ver = CompletableFuture.supplyAsync(() ->  
 			MongoConnection.markAttendance(Org.userInfo.getInteger("userid"), today));
@@ -148,6 +224,19 @@ public class UserHomeController {
 		Scene scene = new Scene(root);
 		stage.setScene(scene);
 		stage.show();
+	}
+	
+	public void ReportPage(ActionEvent e) throws IOException {
+		FXMLLoader level = new FXMLLoader(getClass().getResource("Report.fxml"));
+		Parent root = level.load();
+		ReportController r = level.getController();
+		r.init(Org);
+		Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+		
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
+		
 	}
 	
 }

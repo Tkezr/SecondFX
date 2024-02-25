@@ -2,7 +2,10 @@ package application;
 
 import static com.mongodb.client.model.Filters.eq;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.bson.Document;
@@ -28,7 +31,7 @@ public class MongoConnection {
         // Replace the placeholder with your MongoDB deployment's connection string
         try (MongoClient mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase("db");
-            MongoCollection<Document> collection = database.getCollection("DataSet");
+            MongoCollection<Document> collection = database.getCollection("UserInfo");
             
             
             Document doc = collection.find(eq("user", "admin")).first();
@@ -71,10 +74,13 @@ public class MongoConnection {
     public static Document searchUserPass(int userid, String password) {
     	try (MongoClient mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase("db");
-            MongoCollection<Document> collection = database.getCollection("DataSet");
+            MongoCollection<Document> collection = database.getCollection("UserInfo");
+            MongoCollection<Document> col = database.getCollection("UserImage");
             
     	Document query = new Document("userid",  userid);
+    	Document q = col.find(query).first();
 		Document result = collection.find(query).first();
+		result.append("image", q.getString("image"));
 		if(result!= null) {
 			if((result.getString("password")).equals(password) )
 			{
@@ -106,12 +112,16 @@ public class MongoConnection {
          return s.toString();
     }
     
-    public static String Createauth() {
+    public static String Createauth(String statusBit) {
     	try (MongoClient mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase("db");
-            MongoCollection<Document> collection = database.getCollection("DataSet");
+            MongoCollection<Document> collection = database.getCollection("UserInfo");
             String auth = randGen();
             System.out.println(auth);
+            String status = "subordinate";
+            if(statusBit.equals("1")) {
+            	status = "supervisor";
+            }
             while(collection.countDocuments(new Document("token", new Document("$exists", true))
                     .append("token", new Document("$eq", auth))) > 0) {
             	auth = randGen();
@@ -122,18 +132,44 @@ public class MongoConnection {
             		.append("user", "")
             		.append("password", "")
             		.append("userid", 0)
-            		.append("image", defImage);
+            		.append("status", status);
+            if(status.equals("subordinate")) newDoc.append("supid", 0);
             collection.insertOne(newDoc);
             		return auth;
            
     	}
     }
     
+    
+    public static ArrayList<String> getHolidays(int userid,int supid)
+    {
+    	ArrayList<String> days = new ArrayList<>();
+    	try (MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase("db");
+            MongoCollection<Document> hol = database.getCollection("Holidays");
+    	
+            Document query = new Document("$or", Arrays.asList(new Document("supid",new Document("$exists",false)), new Document("supid", supid)));
+            
+            try (MongoCursor<Document> cursor = hol.find(query).iterator()) {
+                while (cursor.hasNext()) {
+                    Document doc = cursor.next();
+                    LocalDate holDate = LocalDate.parse(doc.getString("date"));
+                    if(!(holDate.getDayOfWeek() == DayOfWeek.SUNDAY)) {
+                    	days.add(doc.getString("date"));
+                    	System.out.println(doc.getString("date"));
+                    }
+                }
+            }
+    	}
+    	return days;
+    }
+    
     public static int insertUserPass(String token, String username, String password) {
     	
     	try (MongoClient mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase("db");
-            MongoCollection<Document> collection = database.getCollection("DataSet");
+            MongoCollection<Document> collection = database.getCollection("UserInfo");
+            MongoCollection<Document> icollection = database.getCollection("UserImage");
             
             Document query = new Document("token",token);
             if(collection.countDocuments(new Document("token", new Document("$exists", true))
@@ -152,7 +188,9 @@ public class MongoConnection {
             		.append("password",password)
             		.append("userid", userid));
             collection.updateOne(query, newUser);
-            System.out.println("Success ma nigga");
+            Document userImage = new Document("userid", userid)
+            		.append("image", MongoConnection.defImage);
+            icollection.insertOne(userImage);
             return userid;
             
     	}catch(Error e) {
@@ -164,7 +202,7 @@ public class MongoConnection {
     public static void sendimg(String img, int uid) {
     	try (MongoClient mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase("db");
-            MongoCollection<Document> collection = database.getCollection("DataSet");
+            MongoCollection<Document> collection = database.getCollection("UserImage");
             
             Document query = new Document("userid",uid);
             Document insert = new Document("$set",new Document().append("image",img));
@@ -172,11 +210,45 @@ public class MongoConnection {
             collection.updateOne(query, insert);
     	}
     }
+    
+    public static void sendUsername(String name, int uid) {
+    	try (MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase("db");
+            MongoCollection<Document> collection = database.getCollection("UserInfo");
+            
+            
+            Document query = new Document("userid",uid);
+            Document insert = new Document("$set",new Document().append("user",name));
+            
+            collection.updateOne(query, insert);
+    	}
+    }
+    
+    public static String addSubordinate(int uid, int sid) {
+    	try (MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase("db");
+            MongoCollection<Document> collection = database.getCollection("UserInfo");
+            
+            if(collection.countDocuments(new Document("userid", new Document("$exists", true))
+                    .append("userid", new Document("$eq", uid))) != 1) {
+            	return "User does not exists";
+            }
+            
+            Document query = new Document("userid",uid);
+            Document insert = new Document("$set",new Document().append("supid",sid));
+    		Document result = collection.find(query).first();
+    		if(!result.getString("status").equals("subordinate")) return "User has higher authority";
+    		if(result.getInteger("supid")!=0) return "This user already has a supervisor";
+    		collection.updateOne(query,insert);
+    		return "User " + result.getString("user") + " has been added as a subordinate";
+            
+    	}
+    }
 
 	public static String rec(int uid) {
 		try (MongoClient mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase("db");
-            MongoCollection<Document> collection = database.getCollection("DataSet");
+            MongoCollection<Document> collection = database.getCollection("UserImage");
 		Document query = new Document("userid", uid);
 		Document result = collection.find(query).first();
 		return result.getString("image");
