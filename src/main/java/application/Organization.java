@@ -12,6 +12,7 @@ public class Organization {
 	public Document userInfo;
 	public ArrayList<String> attendance;
 	public ArrayList<String> holidays = new ArrayList<>();
+	public ArrayList<String> notifications;
 	
 	
 	public boolean verifyLogin(int user, String pass) throws InterruptedException, ExecutionException {
@@ -22,13 +23,10 @@ public class Organization {
 			attendance = att.get();
 			int s_id = userInfo.getInteger("supid",0);
 			CompletableFuture<ArrayList<String>> hol = CompletableFuture.supplyAsync(() ->  MongoConnection.getHolidays(user,s_id));
+			CompletableFuture<ArrayList<String>> msg = CompletableFuture.supplyAsync(() ->  MongoConnection.getNotifications(user,s_id));
 			holidays = hol.get();
-			if(userInfo != null)
-			{
-				
-				System.out.println(userInfo.toJson());
-				return true;
-			}
+			notifications = msg.get();
+			if(userInfo != null) return true;
 			return false;
 		
 		

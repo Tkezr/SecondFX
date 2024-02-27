@@ -22,10 +22,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
@@ -39,7 +41,7 @@ public class UserHomeController {
 	@FXML
 	ImageView userIcon;
 	@FXML
-	Button nextMonth,addSub;
+	Button nextMonth,addSub,subDetails;
 	@FXML
 	Button prevMonth,markAtnd;
 	@FXML
@@ -48,6 +50,8 @@ public class UserHomeController {
 	GridPane calendarPane;
 	@FXML
 	Label monthYear;
+	@FXML
+	ScrollPane notificationBar;
 
 	String tempS;
 	Organization Org;
@@ -59,12 +63,26 @@ public class UserHomeController {
 		this.Org = Org;
 		userInfo.setText("User: " + Org.userInfo.getString("user") + "     " + "User Id: " + Org.userInfo.getInteger("userid"));
 		userIcon.setImage(new Image(new ByteArrayInputStream(Base64.getDecoder().decode(Org.userInfo.getString("image")))));
+		loadNotifications();
 		currentYearMonth = YearMonth.now();
         updateCalendar(calendarPane, currentYearMonth);
         updateMonthYear();
-        boolean shouldPerms = (Org.userInfo.getString("status").equals("subordinate"));
-        addSub.setVisible(!shouldPerms);
+        boolean shouldPerms = !(Org.userInfo.getString("status").equals("subordinate"));
+        addSub.setVisible(shouldPerms);
+        subDetails.setVisible(shouldPerms);
+        
 		}
+	
+	private void loadNotifications() {
+		VBox tempBox = new VBox(5);
+		for(int i = 1; i <= Org.notifications.size(); i++)
+		{
+			Label label = new Label(i+ ". " + Org.notifications.get(i-1));
+			tempBox.getChildren().add(label);
+		}
+		notificationBar.setContent(tempBox);
+		
+	}
 	
 	public void addSubordinate(ActionEvent e) throws ExecutionException {
 		Node source = (Node) e.getSource();
@@ -96,7 +114,6 @@ public class UserHomeController {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-	            System.out.println(text);
 	            errLabel.setText(text);
 	            submitButton.setDisable(true);
 	        });
@@ -158,7 +175,7 @@ public class UserHomeController {
             
             String thisdate = currentYearMonth.getYear() + "-" + oneTo2digit(currentYearMonth.getMonthValue()) + "-" + oneTo2digit(i);
             System.out.println("i = "+i+" col = "+col+ " day = ");
-            if(col != 0 && !(Org.holidays.contains(thisdate)) && (today.isAfter(LocalDate.parse(thisdate)))) {
+            if(col != 0 && !(Org.holidays.contains(thisdate)) && (today.isAfter(LocalDate.parse(thisdate).minusDays(1)))) {
             if(Org.attendance.contains(thisdate))
             {
             	day.setStyle("-fx-background-color: green");

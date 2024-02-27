@@ -164,6 +164,31 @@ public class MongoConnection {
     	return days;
     }
     
+    public static ArrayList<String> getNotifications(int userid,int supid)
+    {
+    	ArrayList<String> msgs = new ArrayList<>();
+    	try (MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase("db");
+            MongoCollection<Document> msg = database.getCollection("Messages");
+    	
+            Document query = new Document("$or", Arrays.asList(new Document("supid",new Document("$exists",false)), new Document("supid", supid)));
+            
+            try (MongoCursor<Document> cursor = msg.find(query).iterator()) {
+                while (cursor.hasNext()) {
+                    Document doc = cursor.next();
+                    if(LocalDate.parse(doc.getString("delete")).isBefore(LocalDate.now().minusDays(1)))
+                    {
+                    	msg.deleteOne(doc);
+                    }else {
+                    msgs.add(doc.getString("message"));
+                    }
+                    }
+                }
+            }
+    	return msgs;
+    }
+    
+    
     public static int insertUserPass(String token, String username, String password) {
     	
     	try (MongoClient mongoClient = MongoClients.create(uri)) {
@@ -179,8 +204,6 @@ public class MongoConnection {
             	return 0;
             }
             FindIterable<Document> useridDoc = collection.find().sort(Sorts.descending("userid")).limit(1);
-            System.out.println(useridDoc.toString());
-            System.out.println(useridDoc.first().getInteger("userid"));
             int userid = useridDoc.first().getInteger("userid") + 1;
             Document newUser = new Document("$set",new Document()
             		.append("token", "")
@@ -256,5 +279,6 @@ public class MongoConnection {
 			return null;
 		}
 	}
+	
     
 }
