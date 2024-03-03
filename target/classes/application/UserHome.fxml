@@ -52,12 +52,12 @@
                   <Font name="System Bold" size="16.0" />
                </font>
             </Button>
-            <Button fx:id="addSub" layoutX="334.0" layoutY="41.0" mnemonicParsing="false" onAction="#addSubordinate" prefHeight="42.0" prefWidth="161.0" style="-fx-background-color: #7e489a; -fx-border-color: #ecf0f1; -fx-border-width: 3; -fx-border-radius: 2;" text="Add Subordinate" textFill="#ecf0f1">
+            <Button fx:id="addSub" layoutX="334.0" layoutY="41.0" mnemonicParsing="false" onAction="#openHoliday" prefHeight="42.0" prefWidth="161.0" style="-fx-background-color: #7e489a; -fx-border-color: #ecf0f1; -fx-border-width: 3; -fx-border-radius: 2;" text="Declare Holiday" textFill="#ecf0f1">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
             </Button>
-            <Button fx:id="subDetails" layoutX="504.0" layoutY="41.0" mnemonicParsing="false" onAction="#addSubordinate" prefHeight="42.0" prefWidth="161.0" style="-fx-background-color: #7e489a; -fx-border-color: #ecf0f1; -fx-border-width: 3; -fx-border-radius: 2;" text="View Subordinate" textFill="#ecf0f1">
+            <Button fx:id="subDetails" layoutX="504.0" layoutY="41.0" mnemonicParsing="false" onAction="#SLPage" prefHeight="42.0" prefWidth="161.0" style="-fx-background-color: #7e489a; -fx-border-color: #ecf0f1; -fx-border-width: 3; -fx-border-radius: 2;" text="View Subordinate" textFill="#ecf0f1">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>

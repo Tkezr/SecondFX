@@ -5,13 +5,16 @@ import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -30,6 +33,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -49,6 +53,8 @@ public class UserHomeController {
 	@FXML
 	GridPane calendarPane;
 	@FXML
+	GridPane holCalendarPane;
+	@FXML
 	Label monthYear;
 	@FXML
 	ScrollPane notificationBar;
@@ -56,6 +62,8 @@ public class UserHomeController {
 	String tempS;
 	Organization Org;
 	YearMonth currentYearMonth;
+	String dateToMarkHoliday = "",reasonForHoliday = "Hell";
+	
 	
 	public Document user;
 	
@@ -82,6 +90,90 @@ public class UserHomeController {
 		}
 		notificationBar.setContent(tempBox);
 		
+	}
+	
+	public void markHoliday(ActionEvent e) throws InterruptedException, ExecutionException {
+		if(dateToMarkHoliday != "") {
+			CompletableFuture<Void> task = CompletableFuture.runAsync(() -> MongoConnection.markHoliday(dateToMarkHoliday, reasonForHoliday, Org.userInfo.getInteger("userid",0)));
+			 
+			task.get();
+		}
+	}
+	
+	public void openHoliday(ActionEvent e) throws IOException {
+		Node source = (Node) e.getSource();
+	    Stage primaryStage = (Stage) source.getScene().getWindow();
+	    primaryStage.getScene().getRoot().setDisable(true);
+		FXMLLoader level = new FXMLLoader(getClass().getResource("MarkHoliday.fxml"));
+		Parent root = level.load();
+		holCalendarPane = (GridPane) level.getNamespace().get("holCalendarPane");
+		Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("Popup Window");
+   	 	Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
+		
+		LocalDate today = LocalDate.now();
+		LocalDate thisdate = today; int i = 0;
+		while(!thisdate.equals(today.plusWeeks(1))) {
+		if(thisdate.getDayOfWeek()!= DayOfWeek.SUNDAY && !(Org.holidays.contains(thisdate.toString()))) {
+			Button day = new Button(String.valueOf(thisdate));
+        	day.setOnAction(ev -> {
+        		Button thisbutton = (Button) ev.getSource();
+        		dateToMarkHoliday = (thisbutton).getText();
+        		thisbutton.setStyle("-fx-background-color: green");
+        	});
+           day.setAlignment(Pos.CENTER);
+           day.setPadding(new Insets(5));
+			GridPane.setConstraints(day,i,0);
+			holCalendarPane.getChildren().add(day);
+			i++;
+		}
+		thisdate = thisdate.plusDays(1);
+		}
+		 stage.setOnCloseRequest(ev -> {
+	            primaryStage.getScene().getRoot().setDisable(false);
+	        });
+//		 calendarPane.getChildren().removeIf(node -> GridPane.getRowIndex(node) != null || GridPane.getColumnIndex(node) != null);
+//		 LocalDate today = LocalDate.now();
+//		 boolean leak = false;
+//	        if(today.plusDays(7).getMonthValue() != today.getMonthValue()) {
+//	        	leak = true;
+//	        }
+//	        YearMonth yearMonth = YearMonth.of(today.getYear(), today.getMonth());
+//	        int daysInMonth = yearMonth.lengthOfMonth();
+//	        LocalDate firstOfMonth = yearMonth.atDay(1);
+//	        
+//	        String[] daysOfWeek = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+//	        for (int i = 0; i < 7; i++) {
+//	            Label dayLabel = new Label(daysOfWeek[i]);
+//	            dayLabel.setAlignment(Pos.CENTER);
+//	            dayLabel.setPadding(new Insets(5));
+//	            GridPane.setConstraints(dayLabel, i, 0);
+//	            calendarPane.getChildren().add(dayLabel);
+//	        }
+//	        
+//	        int row = 1;
+//	        int col = firstOfMonth.getDayOfWeek().getValue() % 7;
+//	        for (int i = 1; i <= daysInMonth; i++) {
+//	            
+//	            String thisdate = today.getYear() + "-" + oneTo2digit(today.getMonthValue()) + "-" + oneTo2digit(i);
+//	            int diff = (int)ChronoUnit.DAYS.between(LocalDate.parse(thisdate), today);
+//	            if(diff <= 5 || diff >= -5) {
+//	            	Button day = new Button(String.valueOf(i));
+//	            	day.setOnAction(ev -> {
+//	            		markHoliday(ev);
+//	            	});
+//		            day.setAlignment(Pos.CENTER);
+//		            day.setPadding(new Insets(5));
+//		            GridPane.setConstraints(day, col, row);
+//		            calendarPane.getChildren().add(day);
+//	            }
+//	            col = (col + 1) % 7;
+//	            if (col == 0)
+//	                row++;
+//	        }
 	}
 	
 	public void addSubordinate(ActionEvent e) throws ExecutionException {
@@ -256,4 +348,15 @@ public class UserHomeController {
 		
 	}
 	
+	public void SLPage(ActionEvent e) throws IOException, InterruptedException, ExecutionException {
+		FXMLLoader level = new FXMLLoader(getClass().getResource("SubordinateList.fxml"));
+		Parent root = level.load();
+		SubordinateListController sl = level.getController();
+		sl.init(Org);
+		Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+		
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
+	}
 }

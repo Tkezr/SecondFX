@@ -18,16 +18,17 @@ public class Organization {
 	public boolean verifyLogin(int user, String pass) throws InterruptedException, ExecutionException {
 		
 			CompletableFuture<Document> ver = CompletableFuture.supplyAsync(() ->  MongoConnection.searchUserPass(user, pass));
-			CompletableFuture<ArrayList<String>> att = CompletableFuture.supplyAsync(() ->  MongoConnection.getAtt(user));
 			userInfo = ver.get();
+			if(userInfo == null) return false;
+			CompletableFuture<ArrayList<String>> att = CompletableFuture.supplyAsync(() ->  MongoConnection.getAtt(user));
 			attendance = att.get();
 			int s_id = userInfo.getInteger("supid",0);
 			CompletableFuture<ArrayList<String>> hol = CompletableFuture.supplyAsync(() ->  MongoConnection.getHolidays(user,s_id));
 			CompletableFuture<ArrayList<String>> msg = CompletableFuture.supplyAsync(() ->  MongoConnection.getNotifications(user,s_id));
 			holidays = hol.get();
 			notifications = msg.get();
-			if(userInfo != null) return true;
-			return false;
+			
+			return true;
 		
 		
 	}

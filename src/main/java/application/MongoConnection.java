@@ -28,7 +28,6 @@ public class MongoConnection {
 	private static String uri = Mongouri.get();
     public static String conn() {
 
-        // Replace the placeholder with your MongoDB deployment's connection string
         try (MongoClient mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase("db");
             MongoCollection<Document> collection = database.getCollection("UserInfo");
@@ -41,6 +40,17 @@ public class MongoConnection {
             return "notnull";
             
         }}
+    
+    public static void markHoliday(String holiday,String reason,int supid) {
+    	try (MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase("db");
+            MongoCollection<Document> hol = database.getCollection("Holidays");
+            Document toInsert = new Document("date",holiday)
+            		.append("reason",reason)
+            		.append("supid",supid);
+            hol.insertOne(toInsert);
+    	}
+    }
     
     public static String markAttendance(int userid, String date) {
     	try (MongoClient mongoClient = MongoClients.create(uri)) {
@@ -88,7 +98,7 @@ public class MongoConnection {
 				result.remove("_id");
 				result.remove("token");
 				return result;
-			}
+			}else return null;
 		}
 		
     	}catch(Error e) {
@@ -134,6 +144,7 @@ public class MongoConnection {
             		.append("userid", 0)
             		.append("status", status);
             if(status.equals("subordinate")) newDoc.append("supid", 0);
+            else newDoc.append("supid", 10000);
             collection.insertOne(newDoc);
             		return auth;
            
@@ -188,6 +199,33 @@ public class MongoConnection {
     	return msgs;
     }
     
+    public static ArrayList<ArrayList<String>> getSubAttendance(int supid){
+    	ArrayList<Integer> studentList = new ArrayList<>();
+    	ArrayList<ArrayList<String>> finalList = new ArrayList<ArrayList<String>>();
+    	try (MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase("db");
+            MongoCollection<Document> uCol = database.getCollection("UserInfo");
+            
+            Document query = new Document("supid", supid);
+            
+            try (MongoCursor<Document> cursor = uCol.find(query).iterator()) {
+                while (cursor.hasNext()) {
+                    Document doc = cursor.next();
+                    studentList.add(doc.getInteger("userid"));
+                }
+    	}
+            
+            for(int uid : studentList) {
+            	query = new Document("userid",uid);
+            	Document x = uCol.find(query).first();
+            	ArrayList<String> a = new ArrayList<String>();
+            	a.add(x.getString("user"));a.add(uid + "");a.addAll(getAtt(uid));
+            	finalList.add(a);
+            }
+            System.out.println(finalList);
+    	return finalList;
+    	}
+    }
     
     public static int insertUserPass(String token, String username, String password) {
     	
