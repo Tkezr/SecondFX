@@ -47,7 +47,7 @@ public class UserHomeController {
 	@FXML
 	Button nextMonth,addSub,subDetails;
 	@FXML
-	Button prevMonth,markAtnd;
+	Button prevMonth,markAtnd,confirmHoliday;
 	@FXML
 	StackPane stackPane;
 	@FXML
@@ -58,6 +58,8 @@ public class UserHomeController {
 	Label monthYear;
 	@FXML
 	ScrollPane notificationBar;
+	@FXML
+	TextField reasonField;
 
 	String tempS;
 	Organization Org;
@@ -93,10 +95,9 @@ public class UserHomeController {
 	}
 	
 	public void markHoliday(ActionEvent e) throws InterruptedException, ExecutionException {
+		System.out.println(dateToMarkHoliday);
 		if(dateToMarkHoliday != "") {
-			CompletableFuture<Void> task = CompletableFuture.runAsync(() -> MongoConnection.markHoliday(dateToMarkHoliday, reasonForHoliday, Org.userInfo.getInteger("userid",0)));
-			 
-			task.get();
+			MongoConnection.markHoliday(dateToMarkHoliday, reasonForHoliday, Org.userInfo.getInteger("userid",0));
 		}
 	}
 	
@@ -107,12 +108,27 @@ public class UserHomeController {
 		FXMLLoader level = new FXMLLoader(getClass().getResource("MarkHoliday.fxml"));
 		Parent root = level.load();
 		holCalendarPane = (GridPane) level.getNamespace().get("holCalendarPane");
+		confirmHoliday = (Button)level.getNamespace().get("confirmHoliday");
+		reasonField = (TextField)level.getNamespace().get("reasonForHoliday");
 		Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Popup Window");
    	 	Scene scene = new Scene(root);
 		stage.setScene(scene);
 		stage.show();
+		
+		confirmHoliday.setOnAction(ev -> {
+			reasonForHoliday = reasonField.getText();
+			try {
+				markHoliday(ev);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
 		
 		LocalDate today = LocalDate.now();
 		LocalDate thisdate = today; int i = 0;

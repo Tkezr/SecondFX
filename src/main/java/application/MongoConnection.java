@@ -49,6 +49,18 @@ public class MongoConnection {
             		.append("reason",reason)
             		.append("supid",supid);
             hol.insertOne(toInsert);
+            sendHolidayNotification(holiday,"Holiday On " + holiday + " - "+ reason,supid);
+    	}
+    }
+    
+    public static void sendHolidayNotification(String delete,String message,int supid) {
+    	try (MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase("db");
+            MongoCollection<Document> msg = database.getCollection("Messages");
+            Document toInsert = new Document("message",message)
+            		.append("delete",delete)
+            		.append("supid",supid);
+            msg.insertOne(toInsert);
     	}
     }
     

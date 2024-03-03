@@ -24,9 +24,9 @@
           <RowConstraints minHeight="5.0" prefHeight="35.0" vgrow="SOMETIMES" />
         </rowConstraints>
       </GridPane>
-      <Button layoutX="246.0" layoutY="298.0" mnemonicParsing="false" onAction="#markHoliday" prefHeight="45.0" prefWidth="110.0" text="Confirm Holiday" />
+      <Button fx:id="confirmHoliday" layoutX="246.0" layoutY="298.0" mnemonicParsing="false" onAction="#markHoliday" prefHeight="45.0" prefWidth="110.0" text="Confirm Holiday" />
       <Label layoutX="75.0" layoutY="344.0" prefHeight="38.0" prefWidth="460.0" text="You Have Selected xx-xx-xxxx ,if correct please press confirm,if not pick another date." />
-      <TextField layoutX="17.0" layoutY="235.0" prefHeight="38.0" prefWidth="575.0" />
+      <TextField fx:id="reasonForHoliday" layoutX="17.0" layoutY="235.0" prefHeight="38.0" prefWidth="575.0" />
       <Label layoutX="17.0" layoutY="209.0" text="Reason For Holiday" />
    </children>
 </AnchorPane>
