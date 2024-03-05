@@ -24,7 +24,7 @@ public class ReportController {
 	@FXML
 	Circle clip;
 	@FXML
-	Label attDays,percentDays,totalDays,elig;
+	Label attDays,percentDays,totalDays,elig,userNameID;
 	@FXML
 	PieChart pie;
 	
@@ -33,7 +33,7 @@ public class ReportController {
 	
 	public void init(Organization Org) {
 		this.Org = Org;
-		 
+		 userNameID.setText("User: " + Org.userInfo.getString("user") + "     " + "User Id: " + Org.userInfo.getInteger("userid"));
 		 LocalDate today = LocalDate.now();
 		 LocalDate date = LocalDate.of(2024, 1,1);
 		 int sundays = 0;
@@ -47,7 +47,6 @@ public class ReportController {
 	        }
 		 
 		 tDays = (int) ((ChronoUnit.DAYS.between(LocalDate.parse("2024-01-01"), today)) - (Org.holidays.size()+sundays));
-		 System.out.println("Total = "+ tDays);
 		 
 		 attDays.setText("" + Org.attendance.size());
 		 totalDays.setText("" + tDays);

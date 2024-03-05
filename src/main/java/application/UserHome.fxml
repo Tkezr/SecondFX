@@ -30,6 +30,9 @@
             <RowConstraints minHeight="15.0" prefHeight="40.0" vgrow="NEVER" />
             <RowConstraints minHeight="15.0" prefHeight="40.0" vgrow="NEVER" />
         </rowConstraints>
+         <children>
+            <Label alignment="CENTER" text="Label" GridPane.columnIndex="6" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
+         </children>
       </GridPane>
       <AnchorPane prefHeight="98.0" prefWidth="880.0" style="-fx-background-color: #9b59b6;">
          <children>

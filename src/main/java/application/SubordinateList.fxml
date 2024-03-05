@@ -11,7 +11,7 @@
    <children>
       <AnchorPane prefHeight="36.0" prefWidth="610.0" style="-fx-background-color: #9b59b6;">
          <children>
-            <Label fx:id="userInfo" layoutX="70.0" prefHeight="38.0" prefWidth="539.0" style="-fx-background-color: #9b59b6;" text="User: Niggaman     User Id: 10000" textFill="#ecf0f1">
+            <Label fx:id="userNameID" layoutX="70.0" prefHeight="38.0" prefWidth="539.0" style="-fx-background-color: #9b59b6;" text="User: Niggaman     User Id: 10000" textFill="#ecf0f1">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
@@ -25,6 +25,6 @@
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
         </content>
       </ScrollPane>
-      <Button layoutX="249.0" layoutY="332.0" mnemonicParsing="false" onAction="#addSubordinate" prefHeight="44.0" prefWidth="138.0" text="Add Ma Nigga" />
+      <Button layoutX="249.0" layoutY="332.0" mnemonicParsing="false" onAction="#addSubordinate" prefHeight="44.0" prefWidth="138.0" text="Add a Subordinate" />
    </children>
 </AnchorPane>

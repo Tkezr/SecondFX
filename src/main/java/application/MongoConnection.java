@@ -49,11 +49,11 @@ public class MongoConnection {
             		.append("reason",reason)
             		.append("supid",supid);
             hol.insertOne(toInsert);
-            sendHolidayNotification(holiday,"Holiday On " + holiday + " - "+ reason,supid);
+            sendNotification(holiday,"Holiday On " + holiday + " - "+ reason,supid);
     	}
     }
     
-    public static void sendHolidayNotification(String delete,String message,int supid) {
+    public static void sendNotification(String delete,String message,int supid) {
     	try (MongoClient mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase("db");
             MongoCollection<Document> msg = database.getCollection("Messages");
@@ -85,7 +85,6 @@ public class MongoConnection {
                     Document document = cursor.next();
                     if(document.getBoolean("present",false) == true) {
                     finalArray.add(document.getString("date"));
-                    System.out.println(document.getString("date"));
                     }
                 }
             }
@@ -114,7 +113,6 @@ public class MongoConnection {
 		}
 		
     	}catch(Error e) {
-    		System.out.println(e);
     	}
     	
     	
@@ -139,7 +137,6 @@ public class MongoConnection {
             MongoDatabase database = mongoClient.getDatabase("db");
             MongoCollection<Document> collection = database.getCollection("UserInfo");
             String auth = randGen();
-            System.out.println(auth);
             String status = "subordinate";
             if(statusBit.equals("1")) {
             	status = "supervisor";
@@ -147,7 +144,6 @@ public class MongoConnection {
             while(collection.countDocuments(new Document("token", new Document("$exists", true))
                     .append("token", new Document("$eq", auth))) > 0) {
             	auth = randGen();
-            	System.out.println(auth);
             	
             }
             Document newDoc = new Document("token",auth)
@@ -179,7 +175,6 @@ public class MongoConnection {
                     LocalDate holDate = LocalDate.parse(doc.getString("date"));
                     if(!(holDate.getDayOfWeek() == DayOfWeek.SUNDAY)) {
                     	days.add(doc.getString("date"));
-                    	System.out.println(doc.getString("date"));
                     }
                 }
             }
@@ -234,7 +229,6 @@ public class MongoConnection {
             	a.add(x.getString("user"));a.add(uid + "");a.addAll(getAtt(uid));
             	finalList.add(a);
             }
-            System.out.println(finalList);
     	return finalList;
     	}
     }
@@ -250,7 +244,6 @@ public class MongoConnection {
             if(collection.countDocuments(new Document("token", new Document("$exists", true))
                     .append("token", new Document("$eq", token))) <= 0)
             {
-            	System.out.println("Invalid Token");
             	return 0;
             }
             FindIterable<Document> useridDoc = collection.find().sort(Sorts.descending("userid")).limit(1);

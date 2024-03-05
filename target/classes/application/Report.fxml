@@ -11,7 +11,7 @@
    <children>
       <AnchorPane prefHeight="36.0" prefWidth="610.0" style="-fx-background-color: #9b59b6;">
          <children>
-            <Label layoutX="70.0" prefHeight="38.0" prefWidth="539.0" style="-fx-background-color: #9b59b6;" text="User: Niggaman     User Id: 10000" textFill="#ecf0f1">
+            <Label fx:id="userNameID" layoutX="70.0" prefHeight="38.0" prefWidth="539.0" style="-fx-background-color: #9b59b6;" text="User: Niggaman     User Id: 10000" textFill="#ecf0f1">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
